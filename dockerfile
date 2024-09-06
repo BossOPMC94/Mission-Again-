@@ -13,5 +13,5 @@ RUN apt-get update && apt-get install -y \
 # Set root as default user
 USER root
 
-# Start tmate session by default
-CMD ["tmate"]
+# Start tmate in the foreground
+CMD ["tmate", "-F"]
