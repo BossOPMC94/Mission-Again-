@@ -3,7 +3,7 @@ FROM ubuntu:22.04
 
 # Set environment variables to avoid interactive time zone selection
 ENV DEBIAN_FRONTEND=noninteractive
-ENV TZ=Etc/UTC  # You can change this to your preferred time zone
+ENV TZ=Etc/UTC
 
 # Update and install necessary packages
 RUN apt-get update && apt-get install -y \
@@ -18,7 +18,9 @@ RUN apt-get update && apt-get install -y \
     redis-server \
     supervisor \
     tzdata \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    # Ensure necessary directories for logs exist
+    && mkdir -p /var/log/nginx /var/log/php-fpm /var/log/redis /var/log/tmate
 
 # Copy the supervisor configuration
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
