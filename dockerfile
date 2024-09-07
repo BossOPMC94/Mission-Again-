@@ -2,30 +2,43 @@
 FROM ubuntu:22.04
 
 # Update and install necessary packages
-RUN apt-get update && apt-get install -y && apt install net-tools -y \
+RUN apt-get update && apt-get install -y \
     curl \
     sudo \
     vim \
     git \
     tmate \
+    php8.1-cli \
+    php8.1-fpm \
+    redis-server \
+    supervisor \
     nginx \
+    net-tools \
+    openssh-server \
+    openssh-client \
+    systemd \
+    systemd-sysv \
+    dbus \
+    dbus-user-session \
+    ufw \
     && rm -rf /var/lib/apt/lists/*
-RUN apt-get update
-RUN apt-get install -y tmate openssh-server openssh-client
+
+# Configure SSH
 RUN sed -i 's/^#\?\s*PermitRootLogin\s\+.*/PermitRootLogin yes/' /etc/ssh/sshd_config
 RUN echo 'root:root' | chpasswd
 RUN printf '#!/bin/sh\nexit 0' > /usr/sbin/policy-rc.d
-RUN apt-get install -y systemd systemd-sysv dbus dbus-user-session
-RUN printf "systemctl start systemd-logind" >> /etc/profile
-RUN apt install curl -y
-RUN apt install ufw -y && ufw allow 80 && ufw allow 443 && apt install net-tools -y
 
+# Configure firewall
+RUN ufw allow 22 && ufw allow 80 && ufw allow 443
 
-# Expose port 80 for HTTP traffic
-EXPOSE 80
+# Copy Supervisor configuration
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+# Expose necessary ports
+EXPOSE 80 6379
 
 # Set root as default user
 USER root
 
-# Start tmate in the foreground and nginx as the web server
-CMD ["sh", "-c", "tmate -F & nginx -g 'daemon off;'"]
+# Start Supervisor to manage PHP-FPM, Redis, nginx, and tmate
+CMD ["/usr/bin/supervisord"]
